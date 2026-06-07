@@ -1,5 +1,3 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import { serverSupabaseClient } from '#supabase/server'
 
 interface SchoolCsvRow {
@@ -19,8 +17,8 @@ export default defineEventHandler(async (event) => {
   // 1. Read and parse the CSV file
   let schools: SchoolCsvRow[] = []
   try {
-    const filePath = path.resolve(process.cwd(), 'schools_2026-06-05.csv')
-    const csvContent = fs.readFileSync(filePath, 'utf8')
+    const csvContent = await useStorage('assets:server').getItem<string>('schools_2026-06-05.csv')
+    if (!csvContent) throw new Error('CSV file not found in assets storage')
     const lines = csvContent.split('\n')
     
     for (let i = 1; i < lines.length; i++) {
