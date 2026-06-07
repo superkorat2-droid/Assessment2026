@@ -950,21 +950,23 @@
     </main>
 
     <!-- Beautiful Image Modal for Consideration Details -->
-    <div v-if="isImageModalOpen" class="modal-overlay" @click.self="closeImageModal">
-      <div class="modal-content glass-panel fade-in" style="max-width: 800px; padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-light); position: relative; background: #0f172a; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); width: 95%; margin: 2rem auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.75rem;">
-          <h3 style="margin: 0; color: #a5b4fc; font-weight: 600; font-size: 1.25rem;">
-            📋 {{ currentModalTitle }}
-          </h3>
-          <button type="button" @click="closeImageModal" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--text-muted)'">
-            &times;
-          </button>
-        </div>
-        <div style="display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; overflow: auto; max-height: 70vh;">
-          <img :src="currentModalImage" alt="รายการพิจารณา" style="max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+    <Teleport to="body">
+      <div v-if="isImageModalOpen" class="modal-overlay" @click.self="closeImageModal">
+        <div class="modal-content glass-panel fade-in" style="max-width: 800px; padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-light); position: relative; background: #0f172a; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); width: 95%; margin: 2rem auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.75rem;">
+            <h3 style="margin: 0; color: #a5b4fc; font-weight: 600; font-size: 1.25rem;">
+              📋 {{ currentModalTitle }}
+            </h3>
+            <button type="button" @click="closeImageModal" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--text-muted)'">
+              &times;
+            </button>
+          </div>
+          <div style="display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; overflow: auto; max-height: 70vh;">
+            <img :src="currentModalImage" alt="รายการพิจารณา" style="max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- Footer developer credit -->
     <footer style="margin-top: 3rem; margin-bottom: 1.5rem; text-align: center;">
