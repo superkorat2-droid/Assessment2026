@@ -90,7 +90,7 @@
     <!-- School List -->
     <main class="school-list-section glass-panel">
       <div class="table-header">
-        <h2>รายชื่อโรงเรียนและสถานะการประเมิน ({{ filteredSchools.length }} โรงเรียน)</h2>
+        <h2>รายชื่อโรงเรียนและสถานะการนิเทศและติดตาม ({{ filteredSchools.length }} โรงเรียน)</h2>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
           <button v-if="isAdminMode" @click="exportDataMenu" class="btn btn-secondary" style="border-color: #10b981; color: #34d399; background: rgba(16, 185, 129, 0.05); display: flex; align-items: center; gap: 0.25rem;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.2rem; height: 1.2rem;">
