@@ -807,9 +807,19 @@
           
           <div class="questions-list">
             <div v-for="item in element.items" :key="item.id" class="question-card glass-card">
-              <div class="q-header">
-                <span class="q-id">{{ item.id }}</span>
-                <p class="q-text">{{ item.text }}</p>
+              <div class="q-header" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; width: 100%;">
+                <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                  <span class="q-id">{{ item.id }}</span>
+                  <p class="q-text">{{ item.text }}</p>
+                </div>
+                <button 
+                  type="button" 
+                  @click="openImageModal(item.id)" 
+                  class="btn-consideration" 
+                  title="คลิกเพื่อเปิดดูรายการพิจารณา"
+                >
+                  📋 รายการพิจารณา
+                </button>
               </div>
 
               <!-- Score 5 4 3 2 1 selector -->
@@ -939,6 +949,23 @@
       </footer>
     </main>
 
+    <!-- Beautiful Image Modal for Consideration Details -->
+    <div v-if="isImageModalOpen" class="modal-overlay" @click.self="closeImageModal">
+      <div class="modal-content glass-panel fade-in" style="max-width: 800px; padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-light); position: relative; background: #0f172a; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); width: 95%; margin: 2rem auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.75rem;">
+          <h3 style="margin: 0; color: #a5b4fc; font-weight: 600; font-size: 1.25rem;">
+            📋 {{ currentModalTitle }}
+          </h3>
+          <button type="button" @click="closeImageModal" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--text-muted)'">
+            &times;
+          </button>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; overflow: auto; max-height: 70vh;">
+          <img :src="currentModalImage" alt="รายการพิจารณา" style="max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+        </div>
+      </div>
+    </div>
+
     <!-- Footer developer credit -->
     <footer style="margin-top: 3rem; margin-bottom: 1.5rem; text-align: center;">
       <p style="color: var(--text-muted); opacity: 0.35; font-size: 0.85rem; font-weight: 400; letter-spacing: 0.05em;">
@@ -1010,6 +1037,21 @@ const form2CoreStructure = form2Questions.core
 const form2CitizenshipStructure = form2Questions.citizenship
 const form3Structure = form3Questions
 const form4Structure = form4Questions
+
+// Modal state for QA consideration images
+const isImageModalOpen = ref(false)
+const currentModalImage = ref('')
+const currentModalTitle = ref('')
+
+const openImageModal = (itemId) => {
+  currentModalTitle.value = `รายการพิจารณา ข้อ ${itemId}`
+  currentModalImage.value = `/111/${itemId}.png`
+  isImageModalOpen.value = true
+}
+
+const closeImageModal = () => {
+  isImageModalOpen.value = false
+}
 
 // Initial state for assessment statuses & assessor names
 const assessmentState = ref({
@@ -2449,6 +2491,63 @@ export default {
   .score-btn {
     padding: 0.6rem 0.5rem;
     font-size: 0.95rem;
+  }
+}
+
+/* QA Consideration Modal & Button Styles */
+.btn-consideration {
+  flex-shrink: 0;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.btn-consideration:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.15);
+}
+
+.btn-consideration:active {
+  transform: translateY(0);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .btn-consideration {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
   }
 }
 </style>
