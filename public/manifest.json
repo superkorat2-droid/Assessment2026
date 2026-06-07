@@ -1,0 +1,36 @@
+{
+  "name": "ระบบนิเทศและติดตามความพร้อมโรงเรียน สพป.นม. 2",
+  "short_name": "นิเทศ สพป.นม.2",
+  "description": "ระบบนิเทศและติดตามความพร้อมเปิดภาคเรียน บูรณาการ 4 เรื่องหลัก สพป.นครราชสีมา เขต 2",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}
