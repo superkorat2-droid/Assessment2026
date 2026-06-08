@@ -967,17 +967,19 @@ const getForm4Progress = (school) => {
 }
 
 // Admin Export Data to CSV
+// Admin Export Data to CSV / XLSX
 const exportDataMenu = async () => {
   const Swal = await getSwal()
   const { value: formId } = await Swal.fire({
-    title: '📥 ส่งออกข้อมูล Excel (.csv)',
+    title: '📥 ส่งออกข้อมูล Excel (.csv / .xlsx)',
     text: 'กรุณาเลือกแบบติดตามที่ต้องการส่งออกข้อมูลสำหรับนำไปวิเคราะห์ต่อใน Excel:',
     input: 'select',
     inputOptions: {
-      'form_1': '1. แบบติดตามความพร้อมเปิดเรียน',
-      'form_2': '2. แบบติดตามจุดเน้นเขตพื้นที่ฯ',
-      'form_3': '3. แบบติดตามการประกันภายใน',
-      'form_4': '4. แบบติดตามนโยบาย สพฐ.'
+      'all': '📦 ส่งออกทั้งหมด (รวมทุกแบบติดตามในไฟล์เดียว .xlsx)',
+      'form_1': '1. แบบติดตามความพร้อมเปิดเรียน (.csv)',
+      'form_2': '2. แบบติดตามจุดเน้นเขตพื้นที่ฯ (.csv)',
+      'form_3': '3. แบบติดตามการประกันภายใน (.csv)',
+      'form_4': '4. แบบติดตามนโยบาย สพฐ. (.csv)'
     },
     inputPlaceholder: '--- เลือกแบบติดตาม ---',
     showCancelButton: true,
@@ -995,20 +997,18 @@ const exportDataMenu = async () => {
   })
 
   if (formId) {
-    runExport(formId)
+    if (formId === 'all') {
+      runExportAll()
+    } else {
+      runExport(formId)
+    }
   }
 }
 
-const runExport = (formId) => {
-  const BOM = '\ufeff';
+// Compile raw data (headers and rows) for a given form
+const getRawDataset = (formId) => {
   let headers = [];
   let rows = [];
-
-  // Helper to escape values for CSV
-  const esc = (v) => {
-    if (v === null || v === undefined) return '""';
-    return '"' + String(v).replace(/"/g, '""') + '"';
-  };
 
   if (formId === 'form_1') {
     headers = [
@@ -1018,7 +1018,6 @@ const runExport = (formId) => {
       'ประเภทผู้บริหาร', 'ชื่อผู้บริหาร', 'เบอร์โทรผู้บริหาร', 'รายชื่อรองผู้บริหาร'
     ];
 
-    // Add question headers
     form1Questions.forEach(sec => {
       sec.items.forEach(item => {
         headers.push(`ข้อ ${item.id} - ${item.text} (สถานะ)`);
@@ -1074,7 +1073,6 @@ const runExport = (formId) => {
         deputiesStr
       ];
 
-      // Add question data
       form1Questions.forEach(sec => {
         sec.items.forEach(item => {
           const val = items[item.id] || {};
@@ -1106,7 +1104,7 @@ const runExport = (formId) => {
       row.push(feedback.improvements || '');
       row.push(feedback.needs || '');
 
-      rows.push(row.map(esc).join(','));
+      rows.push(row);
     });
 
   } else if (formId === 'form_2') {
@@ -1118,27 +1116,23 @@ const runExport = (formId) => {
       'ผู้ให้ข้อมูล (คุณธรรม)', 'ตำแหน่ง (คุณธรรม)', 'วันที่ (คุณธรรม)'
     ];
 
-    // Core reading_writing
     const rwSection = form2Questions.core.find(c => c.key === 'reading_writing');
     rwSection.items.forEach(item => {
       headers.push(`2.1 ข้อ ${item.id} - ${item.text} (ผลการจัด)`);
       headers.push(`2.1 ข้อ ${item.id} - ${item.text} (แหล่งข้อมูล)`);
     });
 
-    // Core math_calculation
     const mathSection = form2Questions.core.find(c => c.key === 'math_calculation');
     mathSection.items.forEach(item => {
       headers.push(`2.2 ข้อ ${item.id} - ${item.text} (ผลการจัด)`);
       headers.push(`2.2 ข้อ ${item.id} - ${item.text} (แหล่งข้อมูล)`);
     });
 
-    // Citizenship indicators
     form2Questions.citizenship.indicators.forEach(item => {
       headers.push(`2.3.1 ข้อ ${item.id} - ${item.text} (ระดับคะแนน 1-4)`);
       headers.push(`2.3.1 ข้อ ${item.id} - ${item.text} (ร่องรอยหลักฐาน)`);
     });
 
-    // Desired attributes
     form2Questions.citizenship.attributes.forEach(item => {
       headers.push(`2.3.2 ข้อ ${item.id} - ${item.text} (ระดับคะแนน 1-4)`);
       headers.push(`2.3.2 ข้อ ${item.id} - ${item.text} (ร่องรอยหลักฐาน)`);
@@ -1185,35 +1179,30 @@ const runExport = (formId) => {
         citizenInfo.responder_date || '-'
       ];
 
-      // RW items
       rwSection.items.forEach(item => {
         const val = rw[item.id] || {};
         row.push(val.has_data === true ? 'มี' : (val.has_data === false ? 'ไม่มี' : '-'));
         row.push(val.source || '');
       });
 
-      // Math items
       mathSection.items.forEach(item => {
         const val = math[item.id] || {};
         row.push(val.has_data === true ? 'มี' : (val.has_data === false ? 'ไม่มี' : '-'));
         row.push(val.source || '');
       });
 
-      // Citizenship indicators
       form2Questions.citizenship.indicators.forEach(item => {
         const val = indicators[item.id] || {};
         row.push(val.score || '-');
         row.push(val.evidence || '');
       });
 
-      // Desired attributes
       form2Questions.citizenship.attributes.forEach(item => {
         const val = attributes[item.id] || {};
         row.push(val.score || '-');
         row.push(val.evidence || '');
       });
 
-      // Feedback
       const f_rw = feedback.reading_writing || {};
       const f_math = feedback.math_calculation || {};
       const f_citizen = feedback.citizenship || {};
@@ -1228,7 +1217,7 @@ const runExport = (formId) => {
       row.push(f_citizen.improvements || '');
       row.push(f_citizen.recommendations || '');
 
-      rows.push(row.map(esc).join(','));
+      rows.push(row);
     });
 
   } else if (formId === 'form_3') {
@@ -1251,7 +1240,6 @@ const runExport = (formId) => {
       return '-';
     };
 
-    // Add question headers
     form3Questions.forEach(el => {
       el.items.forEach(item => {
         headers.push(`องค์ประกอบที่ ${el.id} ข้อ ${item.id} - ${item.text} (ระดับคุณภาพ 1-5)`);
@@ -1259,7 +1247,6 @@ const runExport = (formId) => {
       });
     });
 
-    // Add feedback headers
     form3Questions.forEach(el => {
       headers.push(`องค์ประกอบที่ ${el.id} - จุดเด่น`);
       headers.push(`องค์ประกอบที่ ${el.id} - จุดที่ควรพัฒนา`);
@@ -1300,7 +1287,6 @@ const runExport = (formId) => {
         basic.students_total ?? '-'
       ];
 
-      // Add question data
       form3Questions.forEach(el => {
         el.items.forEach(item => {
           const val = items[item.id] || {};
@@ -1309,14 +1295,13 @@ const runExport = (formId) => {
         });
       });
 
-      // Add feedback comments
       form3Questions.forEach(el => {
         const fb = feedback[el.id] || {};
         row.push(fb.strengths || '');
         row.push(fb.improvements || '');
       });
 
-      rows.push(row.map(esc).join(','));
+      rows.push(row);
     });
 
   } else if (formId === 'form_4') {
@@ -1350,7 +1335,6 @@ const runExport = (formId) => {
         school.assessor_form_4 || '-'
       ];
 
-      // Add question data
       form4Questions.forEach(issue => {
         issue.items.forEach(item => {
           const val = items[item.id] || {};
@@ -1363,12 +1347,28 @@ const runExport = (formId) => {
         });
       });
 
-      rows.push(row.map(esc).join(','));
+      rows.push(row);
     });
   }
 
+  return { headers, rows };
+}
+
+// Single CSV Exporter
+const runExport = (formId) => {
+  const BOM = '\ufeff';
+  
+  // Helper to escape values for CSV
+  const esc = (v) => {
+    if (v === null || v === undefined) return '""';
+    return '"' + String(v).replace(/"/g, '""') + '"';
+  };
+
+  const { headers, rows } = getRawDataset(formId);
+  const csvRows = rows.map(row => row.map(esc).join(','));
+
   // Combine CSV content
-  const csvContent = BOM + [headers.map(esc).join(','), ...rows].join('\n');
+  const csvContent = BOM + [headers.map(esc).join(','), ...csvRows].join('\n');
   
   // Create download link and trigger it
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1389,6 +1389,77 @@ const runExport = (formId) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+// Dynamically load SheetJS CDN
+const loadSheetJS = () => {
+  return new Promise((resolve, reject) => {
+    if (window.XLSX) {
+      resolve(window.XLSX)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+    script.onload = () => resolve(window.XLSX)
+    script.onerror = (err) => reject(err)
+    document.head.appendChild(script)
+  })
+}
+
+// Multi-Sheet XLSX Exporter
+const runExportAll = async () => {
+  const Swal = await getSwal()
+  Swal.fire({
+    title: '⏳ กำลังประมวลผล...',
+    text: 'กำลังรวบรวมข้อมูลและจัดเตรียมไฟล์ Excel แบบหลายชีต กรุณารอสักครู่ครับ...',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  })
+
+  try {
+    const XLSX = await loadSheetJS()
+
+    const wb = XLSX.utils.book_new()
+
+    // 1. ความพร้อมเปิดเรียน
+    const ds1 = getRawDataset('form_1')
+    const ws1 = XLSX.utils.aoa_to_sheet([ds1.headers, ...ds1.rows])
+    XLSX.utils.book_append_sheet(wb, ws1, "1. ความพร้อมเปิดเรียน")
+
+    // 2. จุดเน้นเขตพื้นที่
+    const ds2 = getRawDataset('form_2')
+    const ws2 = XLSX.utils.aoa_to_sheet([ds2.headers, ...ds2.rows])
+    XLSX.utils.book_append_sheet(wb, ws2, "2. จุดเน้นเขตพื้นที่")
+
+    // 3. การประกันภายใน
+    const ds3 = getRawDataset('form_3')
+    const ws3 = XLSX.utils.aoa_to_sheet([ds3.headers, ...ds3.rows])
+    XLSX.utils.book_append_sheet(wb, ws3, "3. การประกันภายใน")
+
+    // 4. นโยบาย สพฐ.
+    const ds4 = getRawDataset('form_4')
+    const ws4 = XLSX.utils.aoa_to_sheet([ds4.headers, ...ds4.rows])
+    XLSX.utils.book_append_sheet(wb, ws4, "4. นโยบาย สพฐ.")
+
+    // File name and save
+    const currentDate = new Date().toLocaleDateString('th-TH').replace(/\//g, '-')
+    XLSX.writeFile(wb, `สรุปข้อมูลการประเมินทุกด้าน_${currentDate}.xlsx`)
+
+    Swal.close()
+    Swal.fire({
+      icon: 'success',
+      title: 'ดาวน์โหลดสำเร็จ!',
+      text: 'ระบบส่งออกไฟล์ Excel รวมทุกแบบติดตามเรียบร้อยแล้วครับ',
+      timer: 2000,
+      showConfirmButton: false
+    })
+  } catch (err) {
+    Swal.close()
+    console.error(err)
+    Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถสร้างไฟล์ Excel ได้: ' + (err.message || err), 'error')
+  }
 };
 </script>
 
