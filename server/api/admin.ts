@@ -35,6 +35,28 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // --- ACTION: CLEAR ALL (Delete all assessments in the database) ---
+  if (action === 'clear-all') {
+    try {
+      const { error } = await client
+        .from('school_assessments')
+        .delete()
+        .neq('dmc_code', '') // deletes all rows as dmc_code is never empty
+
+      if (error) throw error
+
+      return {
+        success: true,
+        message: 'ล้างข้อมูลการประเมินทั้งหมดในระบบเรียบร้อยแล้ว'
+      }
+    } catch (e: any) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: `Failed to clear all records: ${e.message || e}`
+      })
+    }
+  }
+
   // --- ACTION: RESET FORM (Reset a single evaluation form for the school) ---
   if (action === 'reset-form') {
     if (!form_type) {

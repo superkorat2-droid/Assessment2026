@@ -119,7 +119,7 @@ export default defineEventHandler(async (event) => {
 
 // Call Gemini API utility
 async function callGemini(apiKey: string, prompt: string) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
   
   const response = await $fetch<any>(url, {
     method: 'POST',

@@ -35,12 +35,23 @@
 
     <!-- Stats Summary Section -->
     <section class="stats-grid">
-      <div class="stat-card glass-panel" v-for="(stat, i) in statCards" :key="i">
+      <div 
+        class="stat-card glass-panel clickable" 
+        v-for="(stat, i) in statCards" 
+        :key="i"
+        @click="toggleFormFilter(i + 1)"
+        :class="{ 'active-filter': activeFormFilter === i + 1 }"
+        :style="activeFormFilter === i + 1 ? { borderColor: stat.color, boxShadow: `0 0 15px ${stat.color}33`, transform: 'translateY(-4px)' } : {}"
+        title="คลิกเพื่อกรองเฉพาะโรงเรียนที่ประเมินส่วนนี้เสร็จสิ้นแล้ว"
+      >
         <div class="stat-icon-wrapper" :style="{ color: stat.color }">
           <component :is="stat.icon" class="stat-icon" />
         </div>
         <div class="stat-details">
-          <h3>{{ stat.title }}</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>{{ stat.title }}</h3>
+            <span v-if="activeFormFilter === i + 1" style="font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.4rem; border-radius: 4px; color: #fff;">กำลังกรอง 🔍</span>
+          </div>
           <p class="stat-number">{{ stat.completed }}/{{ totalSchools }}</p>
           <p class="stat-meta">โรงเรียนทำเสร็จสิ้นแล้ว</p>
           <div class="progress-bar-bg">
@@ -99,6 +110,16 @@
             ส่งออกข้อมูล Excel (.csv)
           </button>
           
+          <button v-if="isAdminMode" @click="clearAllAssessments" class="btn btn-secondary" style="border-color: #ef4444; color: #f87171; background: rgba(239, 68, 68, 0.05); display: flex; align-items: center; gap: 0.25rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.2rem; height: 1.2rem;">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            ล้างข้อมูลทั้งระบบ
+          </button>
+          
           <NuxtLink to="/ai-summary" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.25rem;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.2rem; height: 1.2rem;">
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
@@ -125,7 +146,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="school in filteredSchools" :key="school.dmc_code">
+            <tr v-for="school in paginatedSchools" :key="school.dmc_code">
               <!-- Admin Reset/Delete Column -->
               <td v-if="isAdminMode" class="text-center">
                 <button @click="deleteSchoolEvaluation(school)" class="delete-btn" title="ลบข้อมูลการประเมินโรงเรียนนี้ทั้งหมด">
@@ -329,7 +350,7 @@
 
       <!-- Mobile cards view -->
       <div class="mobile-school-cards">
-        <div v-for="school in filteredSchools" :key="'mob-' + school.dmc_code" class="mobile-card glass-card">
+        <div v-for="school in paginatedSchools" :key="'mob-' + school.dmc_code" class="mobile-card glass-card">
           <div class="school-card-info" style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div>
               <span class="dmc-badge">{{ school.dmc_code }}</span>
@@ -408,6 +429,65 @@
           </div>
         </div>
       </div>
+
+      <!-- Pagination Controls -->
+      <div v-if="filteredSchools.length > 0" class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-light); flex-wrap: wrap; gap: 1rem;">
+        <div class="pagination-info" style="color: var(--text-muted); font-size: 0.9rem;">
+          แสดง {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredSchools.length) }} จากทั้งหมด {{ filteredSchools.length }} โรงเรียน
+          <span v-if="activeFormFilter" style="background: rgba(255, 255, 255, 0.05); padding: 0.15rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; font-size: 0.8rem; color: #a5b4fc; border: 1px solid rgba(255, 255, 255, 0.05);">
+            กรองประเด็นที่ {{ activeFormFilter }}
+          </span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <!-- Items per page selector -->
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <label style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;">แสดงต่อหน้า:</label>
+            <select v-model="itemsPerPage" class="select-input" style="padding: 0.3rem 1.5rem 0.3rem 0.6rem; font-size: 0.85rem; width: auto; height: auto;">
+              <option :value="10">10</option>
+              <option :value="15">15</option>
+              <option :value="25">25</option>
+              <option :value="50">50</option>
+              <option :value="-1">ทั้งหมด</option>
+            </select>
+          </div>
+
+          <!-- Page buttons -->
+          <div v-if="itemsPerPage !== -1 && totalPages > 1" style="display: flex; gap: 0.35rem;">
+            <button 
+              type="button" 
+              @click="currentPage = Math.max(1, currentPage - 1)" 
+              :disabled="currentPage === 1" 
+              class="btn btn-secondary" 
+              style="padding: 0.3rem 0.6rem; font-size: 0.85rem; height: auto;"
+            >
+              ย้อนกลับ
+            </button>
+            
+            <button 
+              v-for="page in totalPages" 
+              :key="page" 
+              type="button" 
+              @click="currentPage = page" 
+              class="btn" 
+              :class="currentPage === page ? 'btn-primary' : 'btn-secondary'"
+              style="padding: 0.3rem 0.6rem; font-size: 0.85rem; height: auto; min-width: 32px;"
+            >
+              {{ page }}
+            </button>
+
+            <button 
+              type="button" 
+              @click="currentPage = Math.min(totalPages, currentPage + 1)" 
+              :disabled="currentPage === totalPages" 
+              class="btn btn-secondary" 
+              style="padding: 0.3rem 0.6rem; font-size: 0.85rem; height: auto;"
+            >
+              ถัดไป
+            </button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Footer developer credit -->
@@ -431,6 +511,19 @@ const selectedDistrict = ref('')
 const selectedGroup = ref('')
 const selectedSchoolName = ref('')
 const schoolsList = ref([])
+
+// Stats and Pagination Filter
+const activeFormFilter = ref(null)
+const currentPage = ref(1)
+const itemsPerPage = ref(15)
+
+const toggleFormFilter = (formNum) => {
+  if (activeFormFilter.value === formNum) {
+    activeFormFilter.value = null
+  } else {
+    activeFormFilter.value = formNum
+  }
+}
 
 // Theme toggle function
 const toggleTheme = () => {
@@ -668,6 +761,60 @@ const toggleFormLock = async (school, formType) => {
   }
 }
 
+// Admin Clear All assessments
+const clearAllAssessments = async () => {
+  const Swal = await getSwal()
+  const result = await Swal.fire({
+    title: '⚠️ ล้างข้อมูลทั้งระบบ?',
+    text: 'การดำเนินการนี้จะลบข้อมูลการประเมินและการบันทึกแบบร่างของทุกโรงเรียนออกจากฐานข้อมูลจริงอย่างถาวร กรุณาส่งออกข้อมูลในรูปแบบไฟล์ Excel (.csv) เพื่อสำรองข้อมูลก่อนดำเนินการต่อครับ!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#374151',
+    confirmButtonText: 'ฉันได้สำรองข้อมูลแล้ว และยืนยันลบทั้งหมด',
+    cancelButtonText: 'ยกเลิก'
+  })
+
+  if (result.isConfirmed) {
+    const { value: confirmText } = await Swal.fire({
+      title: '🔐 ตรวจสอบความปลอดภัย',
+      text: 'กรุณาพิมพ์คำว่า "ลบข้อมูลทั้งหมด" เพื่อยืนยันการลบฐานข้อมูลทั้งหมดอย่างถาวร:',
+      input: 'text',
+      inputPlaceholder: 'ลบข้อมูลทั้งหมด',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'ลบข้อมูลอย่างถาวร',
+      cancelButtonText: 'ยกเลิก'
+    })
+
+    if (confirmText === 'ลบข้อมูลทั้งหมด') {
+      try {
+        const res = await $fetch('/api/admin', {
+          method: 'POST',
+          body: {
+            action: 'clear-all',
+            dmc_code: 'ALL'
+          }
+        })
+        if (res.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ!',
+            text: res.message,
+            timer: 3000,
+            showConfirmButton: true
+          })
+          await loadSchools() // Reload the list
+        }
+      } catch (err) {
+        Swal.fire('ข้อผิดพลาด!', 'ไม่สามารถลบข้อมูลทั้งหมดได้: ' + (err.statusMessage || err.message), 'error')
+      }
+    } else if (confirmText !== undefined) {
+      Swal.fire('ข้อผิดพลาด!', 'คุณพิมพ์ข้อความยืนยันไม่ถูกต้อง ระบบจึงปฏิเสธการลบข้อมูลทั้งหมด', 'error')
+    }
+  }
+}
+
 // Open report in print view
 const printFormReport = (dmcCode, formType) => {
   window.open(`/report-${dmcCode}-${formType}`, '_blank')
@@ -675,7 +822,14 @@ const printFormReport = (dmcCode, formType) => {
 
 // Filtered schools logic
 const filteredSchools = computed(() => {
-  return schoolsList.value.filter((school) => {
+  let list = schoolsList.value
+  
+  if (activeFormFilter.value) {
+    const statusKey = `status_form_${activeFormFilter.value}`
+    list = list.filter(s => s[statusKey] === 'completed')
+  }
+
+  return list.filter((school) => {
     const matchQuery = 
       school.name.includes(searchQuery.value) || 
       school.dmc_code.includes(searchQuery.value)
@@ -686,6 +840,26 @@ const filteredSchools = computed(() => {
 
     return matchQuery && matchDistrict && matchGroup && matchSchoolName
   })
+})
+
+// Pagination logic
+const paginatedSchools = computed(() => {
+  if (itemsPerPage.value === -1) {
+    return filteredSchools.value
+  }
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredSchools.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  if (itemsPerPage.value === -1) return 1
+  return Math.ceil(filteredSchools.value.length / itemsPerPage.value) || 1
+})
+
+// Reset current page when filters or query changes
+watch([searchQuery, selectedDistrict, selectedGroup, selectedSchoolName, activeFormFilter], () => {
+  currentPage.value = 1
 })
 
 // Stat computations for progress bars
@@ -1673,5 +1847,17 @@ export default {
   background: var(--color-primary-glow);
   border-color: var(--color-primary);
   color: white;
+}
+
+/* Clickable Stats Cards & Active Filters */
+.stat-card.clickable {
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.stat-card.clickable:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 </style>

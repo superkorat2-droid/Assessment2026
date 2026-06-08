@@ -72,7 +72,8 @@ export default defineEventHandler(async (event) => {
       assessor_name,
       form_type,
       status, // 'draft' | 'completed'
-      data
+      data,
+      is_admin
     } = body
 
     if (!dmc_code || !form_type || !status) {
@@ -95,7 +96,7 @@ export default defineEventHandler(async (event) => {
       if (existingRecord) {
         const currentStatus = existingRecord[`status_${form_type}`]
         const isUnlocked = existingRecord[`unlocked_${form_type}`]
-        if (currentStatus === 'completed' && !isUnlocked) {
+        if (currentStatus === 'completed' && !isUnlocked && !is_admin) {
           throw createError({
             statusCode: 403,
             statusMessage: 'แบบประเมินนี้ถูกล็อกการแก้ไขแล้ว กรุณาติดต่อผู้ดูแลระบบ (Admin) เพื่อปลดล็อก'

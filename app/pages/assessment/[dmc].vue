@@ -181,11 +181,17 @@
             </div>
             <div class="evidence-input">
               <label>เปิดสอนระดับ:</label>
-              <input type="text" v-model="formData.form_1_basic_info.level_from" placeholder="เช่น อนุบาล 2..." class="input-text" :disabled="isReadOnly" />
+              <select v-model="formData.form_1_basic_info.level_from" class="select-input" :disabled="isReadOnly">
+                <option value="">-- เลือก --</option>
+                <option v-for="level in schoolLevels" :key="level" :value="level">{{ level }}</option>
+              </select>
             </div>
             <div class="evidence-input">
               <label>ถึงระดับ:</label>
-              <input type="text" v-model="formData.form_1_basic_info.level_to" placeholder="เช่น ประถมศึกษาปีที่ 6..." class="input-text" :disabled="isReadOnly" />
+              <select v-model="formData.form_1_basic_info.level_to" class="select-input" :disabled="isReadOnly">
+                <option value="">-- เลือก --</option>
+                <option v-for="level in schoolLevels" :key="level" :value="level">{{ level }}</option>
+              </select>
             </div>
             <div class="evidence-input">
               <label>ชื่อ-สกุล ผู้ให้ข้อมูล:</label>
@@ -710,11 +716,17 @@
             <div class="evidence-input" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
               <div>
                 <label>8. เปิดสอนระดับ:</label>
-                <input type="text" v-model="formData.form_3_basic_info.level_from" placeholder="เช่น อนุบาล 2" class="input-text" :disabled="isReadOnly" />
+                <select v-model="formData.form_3_basic_info.level_from" class="select-input" :disabled="isReadOnly">
+                  <option value="">-- เลือก --</option>
+                  <option v-for="level in schoolLevels" :key="level" :value="level">{{ level }}</option>
+                </select>
               </div>
               <div>
                 <label>ถึงระดับ:</label>
-                <input type="text" v-model="formData.form_3_basic_info.level_to" placeholder="เช่น ม.3" class="input-text" :disabled="isReadOnly" />
+                <select v-model="formData.form_3_basic_info.level_to" class="select-input" :disabled="isReadOnly">
+                  <option value="">-- เลือก --</option>
+                  <option v-for="level in schoolLevels" :key="level" :value="level">{{ level }}</option>
+                </select>
               </div>
             </div>
           </div>
@@ -999,6 +1011,21 @@ const isInitializing = ref(true)
 const schoolInfo = ref(null)
 const assessorName = ref('')
 const saving = ref(false)
+
+const schoolLevels = [
+  'อนุบาล 1',
+  'อนุบาล 2',
+  'อนุบาล 3',
+  'ประถมศึกษาปีที่ 1',
+  'ประถมศึกษาปีที่ 2',
+  'ประถมศึกษาปีที่ 3',
+  'ประถมศึกษาปีที่ 4',
+  'ประถมศึกษาปีที่ 5',
+  'ประถมศึกษาปีที่ 6',
+  'มัธยมศึกษาปีที่ 1',
+  'มัธยมศึกษาปีที่ 2',
+  'มัธยมศึกษาปีที่ 3'
+]
 
 const toggleTheme = () => {
   isLightTheme.value = !isLightTheme.value
@@ -1361,12 +1388,13 @@ const form3TotalStudentsComputed = computed(() => {
   const k = Number(formData.value.form_3_basic_info.students_kindergarten) || 0
   const p = Number(formData.value.form_3_basic_info.students_primary) || 0
   const j = Number(formData.value.form_3_basic_info.students_junior_high) || 0
-  const total = k + p + j
-  formData.value.form_3_basic_info.students_total = total
-  return total
+  return k + p + j
 })
 
 watch(form3TotalStudentsComputed, (newTotal) => {
+  if (!formData.value.form_3_basic_info) return
+  formData.value.form_3_basic_info.students_total = newTotal
+  
   if (isReadOnly.value) return
   if (newTotal === 0) return
   
@@ -1627,7 +1655,8 @@ const saveAssessmentData = async (targetStatus) => {
         assessor_name: assessorName.value,
         form_type: activeForm.value,
         status: targetStatus,
-        data: dataPayload
+        data: dataPayload,
+        is_admin: isAdminMode.value
       }
     })
 
