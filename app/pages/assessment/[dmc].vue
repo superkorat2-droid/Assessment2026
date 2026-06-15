@@ -6,7 +6,7 @@
         <img src="/obec_logo.png" alt="สพฐ Logo" class="obec-logo" style="height: 70px;" />
         <div class="header-main">
           <h1 class="gradient-text" style="font-size: 1.8rem; margin-bottom: 0.2rem;">
-            <span style="display: inline-block;">นิเทศและติดตาม</span><span style="display: inline-block;">ความพร้อมโรงเรียน</span>
+            <span style="display: inline-block;">ระบบนิเทศ ติดตามการเปิดภาคเรียนที่ 1</span><span style="display: inline-block;">ปีการศึกษา 2569</span>
           </h1>
           <p class="subtitle" style="font-size: 0.9rem;">สำนักงานเขตพื้นที่การศึกษาประถมศึกษานครราชสีมา เขต 2</p>
         </div>

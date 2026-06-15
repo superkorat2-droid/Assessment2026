@@ -9,12 +9,12 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'ระบบนิเทศและติดตามความพร้อมโรงเรียน สพป.นม. 2',
+      title: 'ระบบนิเทศ ติดตามการเปิดภาคเรียนที่ 1 ปีการศึกษา 2569 สพป.นม. 2',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover' },
         { name: 'theme-color', content: '#090d16' },
-        { name: 'description', content: 'ระบบนิเทศและติดตามความพร้อมเปิดภาคเรียน บูรณาการ 4 เรื่องหลัก สพป.นครราชสีมา เขต 2' },
+        { name: 'description', content: 'ระบบนิเทศ ติดตามการเปิดภาคเรียนที่ 1 ปีการศึกษา 2569 บูรณาการ 4 เรื่องหลัก สพป.นครราชสีมา เขต 2' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
